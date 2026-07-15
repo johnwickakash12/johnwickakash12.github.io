@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akash Koirala — Vulnerability Assessment & Security Research</title>
+<meta name="description" content="Akash Koirala — freelance vulnerability assessment and security research. Web app VA, recon, honeypot-based threat monitoring.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfbf9;
+    --bg-elevated:#ffffff;
+    --bg-elevated-2:#f2f2ee;
+    --text:#161a2b;
+    --text-dim:#565b72;
+    --text-faint:#9a9da8;
+    --accent:#1c4a7a;
+    --accent-dim:rgba(28,74,122,0.08);
+    --brass:#93672f;
+    --rule:#dcdcd4;
+    --status:#3f7a4f;
+    --tag-blue:#1c4a7a;
+    --tag-brass:#93672f;
+    --tag-slate:#565b72;
+    --tag-moss:#4a6b4d;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 100% 64px;
+    background-position: 0 0;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+  ::selection{ background:var(--accent-dim); color:var(--accent); }
+
+  .wrap{ max-width:920px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- nav ---------- */
+  header.site-nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(251,251,249,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule);
+  }
+  .nav-inner{
+    max-width:920px; margin:0 auto; padding:18px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{
+    font-family:var(--serif); font-weight:600; font-size:16px; letter-spacing:0.01em;
+    display:flex; align-items:center; gap:9px;
+  }
+  .status-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--status);
+    flex-shrink:0;
+  }
+  nav.links{ display:flex; gap:30px; font-family:var(--mono); font-size:11.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; }
+  nav.links a:hover{ color:var(--accent); }
+  @media (max-width:640px){ nav.links{ display:none; } }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:100px 0 76px; border-bottom:1px solid var(--rule); position:relative; }
+  .eyebrow{
+    font-family:var(--mono); font-size:11.5px; color:var(--brass);
+    text-transform:uppercase; letter-spacing:0.1em;
+    margin-bottom:26px;
+    padding-left:16px;
+    border-left:2px solid var(--brass);
+  }
+
+  h1.name{
+    font-family:var(--serif); font-weight:600;
+    font-size:clamp(38px,6.4vw,60px);
+    letter-spacing:-0.01em;
+    line-height:1.08;
+    margin-bottom:16px;
+  }
+  .role-line{
+    font-family:var(--serif); font-style:italic;
+    font-size:clamp(18px,2.4vw,21px);
+    color:var(--text-dim);
+    max-width:560px;
+    margin-bottom:26px;
+  }
+  .pitch{
+    font-size:15.5px; color:var(--text-dim); max-width:520px; margin-bottom:34px;
+  }
+  .status-row{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:12px; color:var(--status);
+    text-transform:uppercase; letter-spacing:0.05em;
+    margin-bottom:34px;
+  }
+  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--sans); font-size:13.5px; font-weight:600;
+    padding:13px 24px; border-radius:0; border:1px solid var(--text);
+    transition:border-color .15s, background .15s, color .15s;
+  }
+  .btn-primary{ background:var(--text); color:var(--bg); border-color:var(--text); }
+  .btn-primary:hover{ background:var(--accent); border-color:var(--accent); }
+  .btn-ghost{ color:var(--text); border-color:var(--rule); }
+  .btn-ghost:hover{ border-color:var(--text); }
+
+  /* ---------- section shell ---------- */
+  section{ padding:68px 0; border-bottom:1px solid var(--rule); background:var(--bg); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ display:flex; align-items:baseline; gap:18px; margin-bottom:38px; }
+  .section-id{ font-family:var(--mono); font-size:11px; color:var(--brass); border:1px solid var(--rule); padding:3px 7px; }
+  .section-title{ font-family:var(--serif); font-weight:600; font-size:25px; letter-spacing:-0.01em; }
+  .section-sub{ font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-left:auto; text-transform:uppercase; letter-spacing:0.04em; }
+
+  /* ---------- summary ---------- */
+  .summary p{ color:var(--text-dim); max-width:640px; margin-bottom:14px; font-size:15.5px; }
+  .summary strong{ color:var(--text); font-weight:600; }
+  .stat-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--rule); border:1px solid var(--rule); margin-top:32px; overflow:hidden;
+  }
+  .stat{ background:var(--bg-elevated); padding:22px 20px; }
+  .stat-num{ font-family:var(--serif); font-size:28px; font-weight:600; color:var(--accent); }
+  .stat-label{ font-family:var(--sans); font-size:12.5px; color:var(--text-dim); margin-top:8px; line-height:1.4; }
+  @media (max-width:640px){ .stat-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- scope / services ---------- */
+  .scope-list{ display:flex; flex-direction:column; }
+  .scope-item{
+    display:grid; grid-template-columns:44px 1fr; gap:20px;
+    padding:24px 0; border-top:1px solid var(--rule);
+  }
+  .scope-item:last-child{ border-bottom:1px solid var(--rule); }
+  .scope-idx{ font-family:var(--mono); font-size:12px; color:var(--text-faint); padding-top:3px; }
+  .scope-title{ font-family:var(--serif); font-weight:600; font-size:17px; margin-bottom:6px; }
+  .scope-desc{ color:var(--text-dim); font-size:14.5px; max-width:560px; }
+
+  /* ---------- findings (signature element) ---------- */
+  .finding{
+    background:var(--bg-elevated);
+    border:1px solid var(--rule);
+    position:relative;
+    margin-bottom:12px;
+    overflow:hidden;
+    opacity:0; transform:translateY(10px);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .finding.in-view{ opacity:1; transform:translateY(0); }
+  .finding::before, .finding::after{
+    content:""; position:absolute; width:9px; height:9px;
+    border-color:var(--brass); opacity:0; transition:opacity .2s;
+  }
+  .finding::before{ top:-1px; left:-1px; border-top:1.5px solid; border-left:1.5px solid; }
+  .finding::after{ bottom:-1px; right:-1px; border-bottom:1.5px solid; border-right:1.5px solid; }
+  .finding.open::before, .finding.open::after, .finding:hover::before, .finding:hover::after{ opacity:1; }
+  .finding-head{
+    display:flex; align-items:center; gap:16px;
+    padding:18px 22px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .finding-id{ font-family:var(--mono); font-size:12px; color:var(--text-faint); flex-shrink:0; width:42px; }
+  .tag{
+    font-family:var(--mono); font-size:10px; font-weight:600;
+    padding:4px 8px; letter-spacing:0.04em; text-transform:uppercase;
+    flex-shrink:0; border:1px solid currentColor;
+  }
+  .tag-infra{ color:var(--tag-blue); }
+  .tag-web{ color:var(--tag-brass); }
+  .tag-tooling{ color:var(--tag-moss); }
+  .tag-progress{ color:var(--tag-slate); }
+  .finding-title{ font-family:var(--serif); font-weight:600; font-size:16px; flex:1; }
+  .finding-status{ font-family:var(--mono); font-size:10.5px; color:var(--text-faint); flex-shrink:0; text-transform:uppercase; letter-spacing:0.04em; }
+  .chev{ color:var(--text-faint); font-family:var(--mono); font-size:13px; transition:transform .2s; flex-shrink:0; }
+  .finding.open .chev{ transform:rotate(90deg); color:var(--accent); }
+  .finding-body{
+    max-height:0; overflow:hidden; transition:max-height .3s ease;
+  }
+  .finding.open .finding-body{ max-height:400px; }
+  .finding-body-inner{ padding:0 22px 22px 80px; border-top:1px solid var(--rule); margin-top:2px; padding-top:16px; }
+  .finding-body-inner p{ color:var(--text-dim); font-size:14.5px; margin-bottom:12px; }
+  .finding-meta{ display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:11.5px; color:var(--text-faint); }
+  .finding-meta a{ color:var(--accent); }
+  .finding-meta a:hover{ text-decoration:underline; }
+  @media (max-width:640px){
+    .finding-head{ flex-wrap:wrap; padding:15px 18px; }
+    .finding-body-inner{ padding:16px 18px 18px 62px; }
+    .finding-status{ display:none; }
+  }
+
+  /* ---------- toolkit ---------- */
+  .tool-groups{ display:flex; flex-direction:column; gap:28px; }
+  .tool-group-label{ font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-bottom:11px; text-transform:uppercase; letter-spacing:0.06em; }
+  .tool-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font-family:var(--sans); font-weight:500; font-size:13.5px; padding:8px 14px;
+    border:1px solid var(--rule); color:var(--text-dim); background:var(--bg-elevated);
+    transition:border-color .15s, color .15s;
+  }
+  .chip:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* ---------- contact ---------- */
+  .contact-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:48px; }
+  @media (max-width:700px){ .contact-grid{ grid-template-columns:1fr; } }
+  .contact-copy p{ color:var(--text-dim); font-size:15.5px; margin-bottom:22px; max-width:420px; }
+  .contact-links{ display:flex; flex-direction:column; gap:14px; }
+  .contact-link{
+    font-family:var(--sans); font-weight:500; font-size:14.5px; display:flex; align-items:center; gap:10px;
+    padding:13px 0; border-bottom:1px solid var(--rule);
+  }
+  .contact-link:hover{ color:var(--accent); }
+  .contact-link .k{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-faint); width:70px; flex-shrink:0; }
+
+  form.assess-form{ display:flex; flex-direction:column; gap:16px; }
+  .field label{ display:block; font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-bottom:7px; text-transform:uppercase; letter-spacing:0.04em; }
+  .field input, .field textarea{
+    width:100%; background:var(--bg-elevated); border:1px solid var(--rule); border-radius:0;
+    padding:12px 13px; color:var(--text); font-family:var(--sans); font-size:14.5px;
+  }
+  .field input:focus, .field textarea:focus{ outline:none; border-color:var(--accent); }
+  .field textarea{ resize:vertical; min-height:90px; }
+  .assess-form .btn{ align-self:flex-start; cursor:pointer; }
+
+  footer{ padding:36px 0 52px; }
+  .footer-row{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-family:var(--mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="status-dot"></span> Akash Koirala</div>
+    <nav class="links">
+      <a href="#summary">Summary</a>
+      <a href="#scope">Scope</a>
+      <a href="#findings">Work</a>
+      <a href="#toolkit">Toolkit</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero" id="top" style="border-bottom:1px solid var(--rule);">
+    <div class="eyebrow">Vulnerability Assessment Portfolio</div>
+    <h1 class="name">Akash Koirala</h1>
+    <div class="role-line">Vulnerability Assessment &amp; Security Research</div>
+    <p class="pitch">I find and document web application and infrastructure vulnerabilities — methodical recon, hands-on exploitation testing, and reports a non-technical stakeholder can act on.</p>
+    <div class="status-row"><span class="status-dot"></span> Available for new engagements</div>
+    <div class="cta-row">
+      <a href="#findings" class="btn btn-primary">View findings</a>
+      <a href="#contact" class="btn btn-ghost">Request an assessment</a>
+    </div>
+  </section>
+
+  <section id="summary">
+    <div class="section-head">
+      <span class="section-id">01</span>
+      <span class="section-title">Assessment Summary</span>
+    </div>
+    <div class="summary">
+      <p>I'm a third-year <strong>Mechanical Engineering</strong> student who spends the other half of my time doing offensive security work — web app testing, recon, and building detection infrastructure from scratch. The engineering background isn't incidental: it's the same discipline of testing a system until you understand exactly how it fails, applied to code instead of steel.</p>
+      <p>My work is grounded in a live homelab — cross-cloud honeypots, a SIEM correlating logs across three providers, and continuous progress through structured offensive-security curricula — not just certificates. Everything below is something I built, broke, or documented myself.</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">Cloud environments in active lab (Oracle / DO / AWS)</div></div>
+      <div class="stat"><div class="stat-num">5+</div><div class="stat-label">Vulnerability classes tested hands-on (SQLi, XSS, CSRF, IDOR, cache deception)</div></div>
+      <div class="stat"><div class="stat-num">2</div><div class="stat-label">Original tools built (log-integrity + deception-based detection)</div></div>
+    </div>
+  </section>
+
+  <section id="scope">
+    <div class="section-head">
+      <span class="section-id">02</span>
+      <span class="section-title">Engagement Scope</span>
+    </div>
+    <div class="scope-list">
+      <div class="scope-item">
+        <div class="scope-idx">01</div>
+        <div>
+          <div class="scope-title">Web Application Vulnerability Assessment</div>
+          <div class="scope-desc">OWASP Top 10–driven testing: injection, broken auth, access control (IDOR), CSRF, and business-logic flaws — with a written report ranking findings by real-world impact, not just scanner output.</div>
+        </div>
+      </div>
+      <div class="scope-item">
+        <div class="scope-idx">02</div>
+        <div>
+          <div class="scope-title">External Recon &amp; Attack Surface Mapping</div>
+          <div class="scope-desc">Subdomain enumeration, exposed service discovery, and virtual-host discovery to show you what an attacker can already see before they touch your app.</div>
+        </div>
+      </div>
+      <div class="scope-item">
+        <div class="scope-idx">03</div>
+        <div>
+          <div class="scope-title">Deception-Based Threat Monitoring Setup</div>
+          <div class="scope-desc">Lightweight honeypot + log-correlation setups for small teams who want early warning on scanning and credential-stuffing activity without enterprise SIEM cost.</div>
+        </div>
+      </div>
+      <div class="scope-item">
+        <div class="scope-idx">04</div>
+        <div>
+          <div class="scope-title">Findings Report &amp; Remediation Guidance</div>
+          <div class="scope-desc">Every engagement ends with a clear, severity-ranked report and plain-language fix guidance — written for whoever has to act on it, not just other security people.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="findings">
+    <div class="section-head">
+      <span class="section-id">03</span>
+      <span class="section-title">Findings — Selected Work</span>
+      <span class="section-sub">click to expand</span>
+    </div>
+
+    <div class="finding" data-id="F-01">
+      <div class="finding-head">
+        <span class="finding-id">F-01</span>
+        <span class="tag tag-infra">Infra / Detection</span>
+        <span class="finding-title">Cross-Cloud Honeypot &amp; SIEM Pipeline</span>
+        <span class="finding-status">live</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>Deployed a Cowrie SSH honeypot on Oracle Cloud with log forwarding into a Wazuh SIEM instance running on a separate DigitalOcean host — correlating attacker activity across two independent cloud environments rather than a single-box setup.</p>
+          <div class="finding-meta"><span>Stack: Oracle Cloud · DigitalOcean · Cowrie · Wazuh</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finding" data-id="F-02">
+      <div class="finding-head">
+        <span class="finding-id">F-02</span>
+        <span class="tag tag-progress">In Progress</span>
+        <span class="finding-title">T-Pot Multi-Honeypot Deployment</span>
+        <span class="finding-status">building</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>Standing up a T-Pot deployment on AWS to run multiple honeypot services in parallel, expanding coverage beyond SSH to give a broader picture of automated attack traffic.</p>
+          <div class="finding-meta"><span>Stack: AWS · T-Pot</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finding" data-id="F-03">
+      <div class="finding-head">
+        <span class="finding-id">F-03</span>
+        <span class="tag tag-web">Web / CVE Research</span>
+        <span class="finding-title">CVE-2021-41773 — Apache Path Traversal Lab</span>
+        <span class="finding-status">documented</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>Built and documented a reproducible lab exploiting the Apache 2.4.49 path traversal vulnerability, walking through root cause, exploitation, and remediation — written up as a portfolio-grade technical README.</p>
+          <div class="finding-meta"><span>Type: CVE lab writeup</span><a href="https://github.com/johnwickakash12/CVE-2021-41773" target="_blank" rel="noopener">View repository →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finding" data-id="F-04">
+      <div class="finding-head">
+        <span class="finding-id">F-04</span>
+        <span class="tag tag-tooling">Tooling</span>
+        <span class="finding-title">ChainLog — Log Integrity via Hash Chaining</span>
+        <span class="finding-status">built</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>A tool that SHA-256 hash-chains log entries so tampering with historical logs becomes cryptographically detectable — a small, self-contained answer to "how do you know your logs weren't altered after the fact."</p>
+          <div class="finding-meta"><span>Type: Original tool</span><a href="https://github.com/johnwickakash12/Secure--Logging-system" target="_blank" rel="noopener">View repository →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finding" data-id="F-05">
+      <div class="finding-head">
+        <span class="finding-id">F-05</span>
+        <span class="tag tag-tooling">Tooling</span>
+        <span class="finding-title">Deceptex — Honeypot-Based IDS</span>
+        <span class="finding-status">built</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>An intrusion-detection approach built around deception rather than signature matching — using decoy services to flag intent, not just known attack patterns.</p>
+          <div class="finding-meta"><span>Type: Original tool</span><a href="https://github.com/johnwickakash12/Honeypot" target="_blank" rel="noopener">View repository →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finding" data-id="F-06">
+      <div class="finding-head">
+        <span class="finding-id">F-06</span>
+        <span class="tag tag-web">Web App Security</span>
+        <span class="finding-title">PortSwigger Web Security Academy</span>
+        <span class="finding-status">in progress</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>Working through practical labs covering SQL injection, CSRF, XSS, IDOR, and web cache deception — building the muscle memory for how these bugs actually behave in a live application, not just the theory.</p>
+          <div class="finding-meta"><span>Focus: OWASP Top 10 classes</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finding" data-id="F-07">
+      <div class="finding-head">
+        <span class="finding-id">F-07</span>
+        <span class="tag tag-progress">In Progress</span>
+        <span class="finding-title">TryHackMe — Junior Pentester Path</span>
+        <span class="finding-status">in progress</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-body-inner">
+          <p>Structured progression through recon, enumeration, and exploitation fundamentals, closing gaps around Windows/AD environments and privilege escalation alongside the web-focused work above.</p>
+          <div class="finding-meta"><span>Focus: Pentesting fundamentals</span></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <section id="toolkit">
+    <div class="section-head">
+      <span class="section-id">04</span>
+      <span class="section-title">Toolkit</span>
+    </div>
+    <div class="tool-groups">
+      <div>
+        <div class="tool-group-label">Recon &amp; Enumeration</div>
+        <div class="tool-chips">
+          <span class="chip">nmap</span><span class="chip">amass</span><span class="chip">subfinder</span>
+          <span class="chip">Katana</span><span class="chip">ffuf</span><span class="chip">gobuster</span>
+          <span class="chip">Shodan</span>
+        </div>
+      </div>
+      <div>
+        <div class="tool-group-label">Web Application Testing</div>
+        <div class="tool-chips">
+          <span class="chip">Burp Suite</span><span class="chip">PortSwigger Labs</span>
+        </div>
+      </div>
+      <div>
+        <div class="tool-group-label">Detection &amp; Monitoring</div>
+        <div class="tool-chips">
+          <span class="chip">Wazuh</span><span class="chip">Cowrie</span><span class="chip">T-Pot</span>
+        </div>
+      </div>
+      <div>
+        <div class="tool-group-label">Scripting &amp; Data Handling</div>
+        <div class="tool-chips">
+          <span class="chip">Python</span><span class="chip">Bash</span><span class="chip">jq</span><span class="chip">grep</span>
+        </div>
+      </div>
+      <div>
+        <div class="tool-group-label">Infrastructure</div>
+        <div class="tool-chips">
+          <span class="chip">Oracle Cloud</span><span class="chip">DigitalOcean</span><span class="chip">AWS</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="section-head">
+      <span class="section-id">05</span>
+      <span class="section-title">Request an Assessment</span>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-copy">
+        <p>Have an application or environment you want tested? Send a short description of scope, and I'll follow up with availability and next steps.</p>
+        <div class="contact-links">
+          <a class="contact-link" href="mailto:koiralaakash95@gmail.com"><span class="k">email</span> koiralaakash95@gmail.com</a>
+          <a class="contact-link" href="https://github.com/johnwickakash12" target="_blank" rel="noopener"><span class="k">github</span> github.com/johnwickakash12</a>
+        </div>
+      </div>
+      <form class="assess-form" action="mailto:koiralaakash95@gmail.com" method="post" enctype="text/plain">
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required>
+        </div>
+        <div class="field">
+          <label for="scope">Scope / what you need tested</label>
+          <textarea id="scope" name="scope" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Send request</button>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <div class="footer-row">
+    <span>© 2026 Akash Koirala</span>
+    <span>akashkoirala.tech</span>
+  </div>
+</footer>
+
+<script>
+  // accordion for findings
+  document.querySelectorAll('.finding-head').forEach(head=>{
+    head.addEventListener('click', ()=>{
+      head.parentElement.classList.toggle('open');
+    });
+  });
+
+  // reveal findings on scroll
+  const items = document.querySelectorAll('.finding');
+  if('IntersectionObserver' in window){
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){ e.target.classList.add('in-view'); io.unobserve(e.target); }
+      });
+    }, { threshold:0.15 });
+    items.forEach(i=>io.observe(i));
+  } else {
+    items.forEach(i=>i.classList.add('in-view'));
+  }
+</script>
+
+</body>
+</html>
